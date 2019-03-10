@@ -9,7 +9,6 @@ defmodule Sider do
           | %{
               reap_interval: pos_integer()
             }
-
   @spec start_link(args) :: GenServer.on_start()
   def start_link(args), do: start_link(args, [])
 
@@ -21,6 +20,16 @@ defmodule Sider do
   def start_link(%{reap_interval: reap_interval}, opts) do
     args = %{reap_interval: reap_interval, capacity: nil}
     start_link(args, opts)
+  end
+
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [opts]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
   end
 
   @spec get(GenServer.server(), key) :: {:ok, value} | {:error, :missing_key}

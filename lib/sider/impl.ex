@@ -12,7 +12,7 @@ defmodule Sider.Impl do
     {:ok, reap_cache} = ReapCache.start_link()
 
     {:ok, reaper} =
-      Reaper.start_link(%{reap_cache: reap_cache, impl: self(), reap_interval: reap_interval})
+      Reaper.start_link(%{reap_cache: reap_cache, sider: self(), reap_interval: reap_interval})
 
     state = %{
       cache: cache,
