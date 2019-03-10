@@ -24,8 +24,7 @@ defmodule Sider.ReapCache do
   end
 
   def handle_call({:set, key, expires_at}, _from, tab) do
-    suffix = 1 / System.unique_integer([:positive])
-    reaper_key = expires_at + suffix
+    reaper_key = create_reaper_key(expires_at)
     {:reply, insert(tab, reaper_key, key), tab}
   end
 
@@ -39,7 +38,7 @@ defmodule Sider.ReapCache do
 
     response =
       case get_first_value(tab) do
-        {:ok, {key, value}} when now > key ->
+        {:ok, {{expires_at, _} = key, value}} when now > expires_at ->
           :ets.delete(tab, key)
           {:ok, value}
 
@@ -72,5 +71,10 @@ defmodule Sider.ReapCache do
       [] -> {:error, :missing_key}
       [{^key, value}] -> {:ok, {key, value}}
     end
+  end
+
+  defp create_reaper_key(expires_at) do
+    nonce = System.unique_integer([:positive])
+    {expires_at, nonce}
   end
 end
