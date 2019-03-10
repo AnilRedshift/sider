@@ -20,7 +20,7 @@ defmodule Sider.Cache do
   def get(pid, key) do
     Agent.get(pid, fn %{tab: tab} ->
       case :ets.lookup(tab, key) do
-        [] -> {:error, :missing}
+        [] -> {:error, :missing_key}
         [{^key, value}] -> {:ok, value}
       end
     end)

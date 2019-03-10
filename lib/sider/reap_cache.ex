@@ -69,7 +69,7 @@ defmodule Sider.ReapCache do
 
   defp get(tab, key) do
     case :ets.lookup(tab, key) do
-      [] -> {:error, :missing}
+      [] -> {:error, :missing_key}
       [{^key, value}] -> {:ok, {key, value}}
     end
   end

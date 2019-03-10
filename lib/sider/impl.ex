@@ -63,8 +63,8 @@ defmodule Sider.Impl do
            validate(item) do
       {:ok, item.value}
     else
-      {:error, :missing} -> {:error, :missing}
-      {:error, :expired} -> {:error, :missing}
+      {:error, :missing_key} -> {:error, :missing_key}
+      {:error, :expired} -> {:error, :missing_key}
       _ -> {:error, :unknown}
     end
   end
