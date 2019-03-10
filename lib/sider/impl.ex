@@ -8,6 +8,7 @@ defmodule Sider.Impl do
   use GenServer
 
   defmodule State do
+    @moduledoc false
     @enforce_keys [:cache, :reap_cache, :reaper, :capacity]
     defstruct @enforce_keys
   end
