@@ -6,8 +6,8 @@ defmodule Sider.ReapCache do
     GenServer.start_link(__MODULE__, args, opts)
   end
 
-  def set(pid, key, timeout) do
-    GenServer.call(pid, {:set, key, timeout})
+  def set(pid, key, expires_at) do
+    GenServer.call(pid, {:set, key, expires_at})
   end
 
   def remove(pid, reaper_key) do
@@ -23,8 +23,7 @@ defmodule Sider.ReapCache do
     {:ok, tab}
   end
 
-  def handle_call({:set, key, timeout}, _from, tab) do
-    expires_at = System.monotonic_time(:millisecond) + timeout
+  def handle_call({:set, key, expires_at}, _from, tab) do
     suffix = 1 / System.unique_integer([:positive])
     reaper_key = expires_at + suffix
     {:reply, insert(tab, reaper_key, key), tab}

@@ -1,7 +1,6 @@
 defmodule Sider.Reaper do
   @moduledoc false
   alias Sider.ReapCache
-  alias Sider.Cache
   use GenServer
 
   def start_link(args, opts \\ []) do

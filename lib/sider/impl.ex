@@ -65,10 +65,11 @@ defmodule Sider.Impl do
 
   defp set(key, value, timeout, %{cache: cache, reap_cache: reap_cache} = state) do
     remove_from_reaper(key, state)
+    expires_at = System.monotonic_time(:millisecond) + timeout
 
-    case ReapCache.set(reap_cache, key, timeout) do
+    case ReapCache.set(reap_cache, key, expires_at) do
       {:ok, reaper_key} ->
-        item = %Item{value: value, timeout: timeout, reaper_key: reaper_key}
+        item = %Item{value: value, expires_at: expires_at, reaper_key: reaper_key}
         Cache.set(cache, key, item)
 
       {:error, reason} ->
@@ -83,7 +84,7 @@ defmodule Sider.Impl do
     end
   end
 
-  defp remove(key, opts, %{cache: cache} = state) do
+  defp remove(key, [], %{cache: cache} = state) do
     remove_from_reaper(key, state)
     Cache.remove(cache, key)
   end
