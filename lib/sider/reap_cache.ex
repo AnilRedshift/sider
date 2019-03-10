@@ -2,6 +2,10 @@ defmodule Sider.ReapCache do
   @moduledoc false
   use GenServer
 
+  def start_link(args \\ [], opts \\ []) do
+    GenServer.start_link(__MODULE__, args, opts)
+  end
+
   def set(pid, key, timeout) do
     GenServer.call(pid, {:set, key, timeout})
   end
@@ -15,7 +19,7 @@ defmodule Sider.ReapCache do
   end
 
   def init(_args) do
-    tab = :ets.new(:test, [:ordered_set, :private])
+    tab = :ets.new(:sider_reap_cache, [:ordered_set, :private])
     {:ok, tab}
   end
 
