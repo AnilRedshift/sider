@@ -90,10 +90,12 @@ defmodule Sider.Impl do
   end
 
   defp remove(key, [only: :expired], %{cache: cache} = state) do
-    case get(cache, key) do
-      {:ok, _item} -> remove(key, [], state)
-      _ -> nil
+    with {:ok, %Item{} = item} <- Cache.get(cache, key),
+    {:error, :expired} <- validate(item) do
+      remove_from_reaper(key, state)
+      Cache.remove(cache, key)
     end
+    nil
   end
 
   defp remove(key, [], %{cache: cache} = state) do
@@ -116,6 +118,7 @@ defmodule Sider.Impl do
     case Cache.get(cache, key) do
       {:ok, %Item{reaper_key: reaper_key}} when reaper_key != nil ->
         ReapCache.remove(reap_cache, reaper_key)
+        _ -> nil
     end
   end
 end
