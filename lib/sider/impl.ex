@@ -7,7 +7,7 @@ defmodule Sider.Impl do
   use GenServer
 
   @impl true
-  def init(%{reap_interval: reap_interval}) do
+  def init(%{reap_interval: reap_interval, capacity: capacity}) do
     {:ok, cache} = Cache.start_link()
     {:ok, reap_cache} = ReapCache.start_link()
 
@@ -17,7 +17,8 @@ defmodule Sider.Impl do
     state = %{
       cache: cache,
       reap_cache: reap_cache,
-      reaper: reaper
+      reaper: reaper,
+      capacity: capacity
     }
 
     {:ok, state}
@@ -29,14 +30,25 @@ defmodule Sider.Impl do
   end
 
   @impl true
-  def handle_call({:set, key, value, nil}, _from, state) do
-    set_infinite(key, value, state)
-    {:reply, :ok, state}
+  def handle_call({:set, key, value, nil}, _from, %{cache: cache, capacity: capacity} = state) do
+    response =
+      case Cache.count(cache) do
+        count when count >= capacity -> {:error, :max_capacity}
+        _ -> set_infinite(key, value, state)
+      end
+
+    {:reply, response, state}
   end
 
   @impl true
-  def handle_call({:set, key, value, timeout}, _from, state) do
-    {:reply, set(key, value, timeout, state), state}
+  def handle_call({:set, key, value, timeout}, _from, %{cache: cache, capacity: capacity} = state) do
+    response =
+      case Cache.count(cache) do
+        count when count >= capacity -> {:error, :max_capacity}
+        _ -> set(key, value, timeout, state)
+      end
+
+    {:reply, response, state}
   end
 
   @impl true
