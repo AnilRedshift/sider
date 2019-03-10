@@ -36,25 +36,13 @@ defmodule Sider.Impl do
   end
 
   @impl true
-  def handle_call({:set, key, value, nil}, _from, %State{} = state) do
-    response =
-      case validate_can_set(key, state) do
-        :ok -> set_infinite(key, value, state)
-        {:error, error} -> {:error, error}
-      end
-
-    {:reply, response, state}
-  end
-
-  @impl true
   def handle_call({:set, key, value, timeout}, _from, %State{} = state) do
-    response =
-      case validate_can_set(key, state) do
-        :ok -> set(key, value, timeout, state)
-        {:error, error} -> {:error, error}
-      end
-
-    {:reply, response, state}
+    case validate_can_set(key, state) do
+      :ok ->
+        set(key, value, timeout, state)
+        {:reply, :ok, state}
+        {:error, reason} -> {:reply, {:error, reason}, state}
+    end
   end
 
   @impl true
@@ -75,7 +63,7 @@ defmodule Sider.Impl do
     end
   end
 
-  defp set_infinite(key, value, %State{cache: cache} = state) do
+  defp set(key, value, nil, %State{cache: cache} = state) do
     remove_from_reaper(key, state)
     item = %Item{value: value}
     Cache.set(cache, key, item)
@@ -84,15 +72,9 @@ defmodule Sider.Impl do
   defp set(key, value, timeout, %State{cache: cache, reap_cache: reap_cache} = state) do
     remove_from_reaper(key, state)
     expires_at = System.monotonic_time(:millisecond) + timeout
-
-    case ReapCache.set(reap_cache, key, expires_at) do
-      {:ok, reaper_key} ->
-        item = %Item{value: value, expires_at: expires_at, reaper_key: reaper_key}
-        Cache.set(cache, key, item)
-
-      {:error, reason} ->
-        {:error, reason}
-    end
+    reaper_key = ReapCache.set(reap_cache, key, expires_at)
+    item = %Item{value: value, expires_at: expires_at, reaper_key: reaper_key}
+    Cache.set(cache, key, item)
   end
 
   defp remove(key, [only: :expired], %State{cache: cache} = state) do
@@ -101,8 +83,6 @@ defmodule Sider.Impl do
       remove_from_reaper(key, state)
       Cache.remove(cache, key)
     end
-
-    nil
   end
 
   defp remove(key, [], %State{cache: cache} = state) do

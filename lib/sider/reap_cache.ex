@@ -25,7 +25,8 @@ defmodule Sider.ReapCache do
 
   def handle_call({:set, key, expires_at}, _from, tab) do
     reaper_key = create_reaper_key(expires_at)
-    {:reply, insert(tab, reaper_key, key), tab}
+    insert(tab, reaper_key, key)
+    {:reply, nil, tab}
   end
 
   def handle_call({:remove, reaper_key}, _from, tab) do
@@ -53,10 +54,7 @@ defmodule Sider.ReapCache do
   end
 
   defp insert(tab, reaper_key, value) do
-    case :ets.insert_new(tab, {reaper_key, value}) do
-      true -> {:ok, reaper_key}
-      false -> {:error, :insertion_error}
-    end
+    true = :ets.insert_new(tab, {reaper_key, value})
   end
 
   defp get_first_value(tab) do
