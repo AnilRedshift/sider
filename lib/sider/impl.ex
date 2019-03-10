@@ -30,22 +30,22 @@ defmodule Sider.Impl do
   end
 
   @impl true
-  def handle_call({:set, key, value, nil}, _from, %{cache: cache, capacity: capacity} = state) do
+  def handle_call({:set, key, value, nil}, _from, state) do
     response =
-      case Cache.count(cache) do
-        count when count >= capacity -> {:error, :max_capacity}
-        _ -> set_infinite(key, value, state)
+      case validate_can_set(key, state) do
+        :ok -> set_infinite(key, value, state)
+        {:error, error} -> {:error, error}
       end
 
     {:reply, response, state}
   end
 
   @impl true
-  def handle_call({:set, key, value, timeout}, _from, %{cache: cache, capacity: capacity} = state) do
+  def handle_call({:set, key, value, timeout}, _from, state) do
     response =
-      case Cache.count(cache) do
-        count when count >= capacity -> {:error, :max_capacity}
-        _ -> set(key, value, timeout, state)
+      case validate_can_set(key, state) do
+        :ok -> set(key, value, timeout, state)
+        {:error, error} -> {:error, error}
       end
 
     {:reply, response, state}
@@ -91,10 +91,11 @@ defmodule Sider.Impl do
 
   defp remove(key, [only: :expired], %{cache: cache} = state) do
     with {:ok, %Item{} = item} <- Cache.get(cache, key),
-    {:error, :expired} <- validate(item) do
+         {:error, :expired} <- validate(item) do
       remove_from_reaper(key, state)
       Cache.remove(cache, key)
     end
+
     nil
   end
 
@@ -114,11 +115,23 @@ defmodule Sider.Impl do
     end
   end
 
+  defp validate_can_set(key, %{cache: cache, capacity: capacity}) do
+    count = Cache.count(cache)
+
+    cond do
+      count < capacity -> :ok
+      Cache.get(cache, key) |> elem(0) == :ok -> :ok
+      true -> {:error, :max_capacity}
+    end
+  end
+
   defp remove_from_reaper(key, %{cache: cache, reap_cache: reap_cache}) do
     case Cache.get(cache, key) do
       {:ok, %Item{reaper_key: reaper_key}} when reaper_key != nil ->
         ReapCache.remove(reap_cache, reaper_key)
-        _ -> nil
+
+      _ ->
+        nil
     end
   end
 end

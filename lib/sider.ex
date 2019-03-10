@@ -9,10 +9,8 @@ defmodule Sider do
           | %{
               reap_interval: pos_integer()
             }
-  @spec start_link(args) :: GenServer.on_start()
   def start_link(args), do: start_link(args, [])
 
-  @spec start_link(args, GenServer.options()) :: GenServer.on_start()
   def start_link(%{reap_interval: _reap_interval, capacity: _capacity} = args, opts) do
     GenServer.start_link(Sider.Impl, args, opts)
   end
