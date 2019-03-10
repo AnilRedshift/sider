@@ -43,9 +43,9 @@ defmodule Sider do
 
   ## Examples
 
-    iex> {:ok, _pid} = Sider.start_link(%{reap_interval: 60_000, capacity: 1_000_000, name: :my_cache})
-    iex> :ok
-    :ok
+      iex> {:ok, _pid} = Sider.start_link(%{reap_interval: 60_000, capacity: 1_000_000, name: :my_cache})
+      iex> :ok
+      :ok
   """
 
   @spec start_link(args) :: GenServer.on_start()
@@ -77,12 +77,12 @@ defmodule Sider do
 
   ## Examples
 
-    iex> {:ok, pid} = Sider.start_link(%{reap_interval: 1, capacity: 100})
-    iex> Sider.set(pid, :a, :foo)
-    iex> {:ok, :foo} = Sider.get(pid, :a)
-    iex> {:error, :missing_key} = Sider.get(pid, :b)
-    iex> :ok
-    :ok
+      iex> {:ok, pid} = Sider.start_link(%{reap_interval: 1, capacity: 100})
+      iex> Sider.set(pid, :a, :foo)
+      iex> {:ok, :foo} = Sider.get(pid, :a)
+      iex> {:error, :missing_key} = Sider.get(pid, :b)
+      iex> :ok
+      :ok
   """
   @spec get(GenServer.server(), key) :: {:ok, value} | {:error, :missing_key}
   def get(pid, key) do
@@ -112,7 +112,7 @@ defmodule Sider do
   Removes a key-value pair from the cache, if it exists.
   This function no-ops if the key is non-existant
 
-  If you pass in the only: :expired option, the value will only be removed if the entry has expired
+  If you pass in the `only: :expired` option, the value will only be removed if the entry has expired
   (See the timeout value in `Sider.set/4`)
 
   ## Examples
