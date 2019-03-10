@@ -12,7 +12,7 @@ defmodule Sider.Impl do
     {:ok, reap_cache} = ReapCache.start_link()
 
     {:ok, reaper} =
-      Reaper.start_link(%{reap_cache: reap_cache, cache: cache, reap_interval: reap_interval})
+      Reaper.start_link(%{reap_cache: reap_cache, impl: self(), reap_interval: reap_interval})
 
     state = %{
       cache: cache,
@@ -40,8 +40,8 @@ defmodule Sider.Impl do
   end
 
   @impl true
-  def handle_call({:remove, key}, _from, state) do
-    remove(key, state)
+  def handle_call({:remove, key, opts}, _from, state) do
+    remove(key, opts, state)
     {:reply, nil, state}
   end
 
@@ -76,7 +76,14 @@ defmodule Sider.Impl do
     end
   end
 
-  defp remove(key, %{cache: cache} = state) do
+  defp remove(key, [only: :expired], %{cache: cache} = state) do
+    case get(cache, key) do
+      {:ok, _item} -> remove(key, [], state)
+      _ -> nil
+    end
+  end
+
+  defp remove(key, opts, %{cache: cache} = state) do
     remove_from_reaper(key, state)
     Cache.remove(cache, key)
   end

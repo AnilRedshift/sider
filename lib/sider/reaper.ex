@@ -13,10 +13,10 @@ defmodule Sider.Reaper do
   end
 
   @impl true
-  def init(%{reap_cache: reap_cache, cache: cache, reap_interval: reap_interval}) do
+  def init(%{reap_cache: reap_cache, sider: sider, reap_interval: reap_interval}) do
     state = %{
       reap_cache: reap_cache,
-      cache: cache,
+      sider: sider,
       reap_interval: reap_interval
     }
 
@@ -37,10 +37,10 @@ defmodule Sider.Reaper do
     {:noreply, state}
   end
 
-  defp handle_reap(%{cache: cache, reap_cache: reap_cache} = state) do
+  defp handle_reap(%{sider: sider, reap_cache: reap_cache} = state) do
     case ReapCache.pop_expired_key(reap_cache) do
       {:ok, key} ->
-        Cache.remove(cache, key)
+        Sider.remove(sider, key, only: :expired)
         handle_reap(state)
 
       _ ->

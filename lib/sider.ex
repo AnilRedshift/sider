@@ -33,8 +33,8 @@ defmodule Sider do
     GenServer.call(pid, {:set, key, value, timeout})
   end
 
-  @spec remove(GenServer.server(), key) :: nil
-  def remove(pid, key) do
-    GenServer.call(pid, {:remove, key})
+  @spec remove(GenServer.server(), key, [] | [{:only, :expired}]) :: nil
+  def remove(pid, key, opts \\ []) do
+    GenServer.call(pid, {:remove, key, opts})
   end
 end
